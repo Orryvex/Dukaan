@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dukaan</title>
+<style>
+:root{--bg:#f2f5fa;--card:#fff;--ink:#0f1b2d;--mute:#5b6779;--line:#dce3ee;--brand:#2540d9;--onbrand:#fff;--gold:#f2a900;--ok:#16794c;--bad:#b3261e}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1320;--card:#161e2e;--ink:#e8edf6;--mute:#9aa7bc;--line:#26324a;--brand:#7b93ff;--onbrand:#0d1320;--ok:#4cc38a;--bad:#ff8a80}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+h1,h2,h3{margin:0;line-height:1.2}button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:980px;margin:0 auto;padding:0 14px 90px}
+header.top{padding:22px 14px 14px;max-width:980px;margin:0 auto}
+header.top h1{font-size:1.7rem;letter-spacing:-.02em}header.top p{margin:4px 0 0;color:var(--mute)}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
+.btn{border:0;background:var(--brand);color:var(--onbrand);padding:10px 16px;border-radius:10px;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}.btn.sm{padding:6px 10px;font-size:.85rem}.btn.bad{background:var(--bad);color:#fff}.btn.wa{background:#1f9d55;color:#fff}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:10px 0}.chip{white-space:nowrap;border:1px solid var(--line);background:var(--card);border-radius:99px;padding:6px 14px;cursor:pointer}.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px}
+.item .pic{font-size:2.4rem;height:64px;display:grid;place-items:center;background:var(--bg);border-radius:10px;overflow:hidden}.item .pic img{width:100%;height:100%;object-fit:cover}
+.item b{font-size:.95rem}.price{font-weight:700}.low{color:var(--bad);font-size:.8rem}.mute{color:var(--mute);font-size:.85rem}
+.qty{display:flex;align-items:center;justify-content:space-between;gap:6px}.qty button{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--card);cursor:pointer;font-size:1.1rem}
+.bar{position:fixed;left:0;right:0;bottom:0;padding:10px 14px;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center}
+.bar .btn{width:100%;max-width:560px;background:var(--gold);color:#1a1200;padding:13px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:5}.sheet.on{display:block}
+.panel{position:absolute;right:0;top:0;bottom:0;width:min(480px,100%);background:var(--bg);padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;align-items:center;justify-content:space-between}.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.stack{display:flex;flex-direction:column;gap:10px}label{font-size:.85rem;color:var(--mute);display:block;margin-bottom:3px}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:6px 0 14px;border-bottom:1px solid var(--line)}.tab{padding:10px 14px;border:0;background:none;cursor:pointer;border-bottom:3px solid transparent;font-weight:600;color:var(--mute)}.tab.on{color:var(--ink);border-color:var(--brand)}
+.st{padding:2px 9px;border-radius:99px;font-size:.78rem;font-weight:700;background:var(--line)}.st.New{background:var(--gold);color:#1a1200}.st.Delivered{background:var(--ok);color:#fff}.st.Cancelled{background:var(--bad);color:#fff}
+.pr{display:grid;grid-template-columns:50px 2fr 1.2fr 80px 80px 70px 40px;gap:6px;align-items:end}
+@media(max-width:700px){.pr{grid-template-columns:1fr 1fr 1fr}.pr .nm{grid-column:1/-1}}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.kpi .card b{font-size:1.5rem;display:block}
+pre{white-space:pre-wrap;background:var(--bg);padding:10px;border-radius:8px;font-size:.85rem}
+#toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:20;display:none;max-width:90%}#toast.on{display:block}#toast.bad{background:var(--bad);color:#fff}
+.panel:focus{outline:none}.ck{display:flex;gap:8px;align-items:center;font-size:.9rem;color:var(--ink);margin:4px 0}.ck input{width:auto}details summary{cursor:pointer}
+</style></head><body><div id="app"></div><div id="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const LS=(k,d)=>{try{const v=localStorage.getItem(k);return v===null?d:JSON.parse(v)}catch{return d}};
+const SV=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch{toast('Could not save. Your browser storage is full or blocked (private mode?).',1);return false}};
+const inr=n=>'₹'+Math.round(Number(n||0)).toLocaleString('en-IN'),phone=p=>{p=String(p).replace(/\D/g,'');return p.length===10?'91'+p:p};
+const uid=()=>crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+function toast(t,bad){const e=$('#toast');e.textContent=t;e.className='on'+(bad?' bad':'');clearTimeout(toast.t);toast.t=setTimeout(()=>e.className='',4000)}
+const DEF={name:'My Shop',tagline:'Order on WhatsApp',whatsapp:'',upi:'',delivery:30,freeAbove:500,minOrder:0,cod:true,closed:false,closedMsg:'',products:[]};
+function norm(s){s={...DEF,...(s&&typeof s==='object'?s:{})};delete s.pin;
+ s.products=(Array.isArray(s.products)?s.products:[]).filter(p=>p&&p.id!=null).map(p=>({id:String(p.id),name:String(p.name||'Unnamed').slice(0,80),cat:String(p.cat||'').slice(0,30),emoji:String(p.emoji||'').slice(0,4),img:/^https?:\/\//.test(p.img||'')?String(p.img):'',price:Math.max(0,+p.price||0),cost:p.cost==null||p.cost===''?undefined:Math.max(0,+p.cost||0),stock:Math.max(0,Math.floor(+p.stock||0))}));
+ ['delivery','freeAbove','minOrder'].forEach(k=>s[k]=Math.max(0,+s[k]||0));s.cod=!(s.cod===false||s.cod===0||s.cod==='0');s.closed=!!s.closed;return s}
+let shop=norm(),orders=LS('orders',[]),cart=LS('cart',{}),cat='All',q='',tab='orders',ADMIN=location.hash==='#admin',loadErr=false;
+const P=id=>shop.products.find(p=>p.id===id);
+async function init(){let pub=null;try{const r=await fetch('shop.json',{cache:'no-store'});if(!r.ok)throw 0;pub=await r.json()}catch{loadErr=true}
+ const d=LS('draft',null);shop=norm(ADMIN?(d||pub):pub);document.title=(ADMIN?'Admin · ':'')+shop.name;
+ if(ADMIN){try{const x=JSON.parse(sessionStorage.getItem('sess'));if(x&&x.exp>Date.now())sess=x}catch{}admin()}else{fixCart();customer()}}
+addEventListener('hashchange',()=>location.reload());
+addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#sheet'))act.close()});
+
+/* ================= CUSTOMER ================= */
+function customer(){
+ if(loadErr&&!shop.products.length){$('#app').innerHTML='<div class="wrap" style="padding-top:40px"><div class="card" role="alert"><b>The shop could not load.</b><br>Check your internet connection and refresh the page.</div></div>';return}
+ $('#app').innerHTML=`<header class="top"><h1>${esc(shop.name)}</h1><p>${esc(shop.tagline)}</p></header>${shop.closed?`<div class="wrap"><div class="card" role="alert"><b>We are not taking orders right now.</b><br>${esc(shop.closedMsg||'Please check back soon.')}</div></div>`:''}
+ <div class="wrap"><input id="q" type="search" placeholder="Search products" aria-label="Search products"><div class="chips" id="chips"></div><div class="grid" id="grid"></div></div>
+ <div class="bar" id="bar"></div><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Cart"><div class="panel" id="panel" tabindex="-1"></div></div>`;
+ $('#q').oninput=e=>{q=e.target.value.toLowerCase();grid()};chips();grid();bar()}
+function chips(){const cs=['All',...new Set(shop.products.map(p=>p.cat).filter(Boolean))];if(!cs.includes(cat))cat='All';$('#chips').innerHTML=cs.map(c=>`<button class="chip ${c===cat?'on':''}" data-a="cat" data-v="${esc(c)}">${esc(c)}</button>`).join('')}
+function grid(){const l=shop.products.filter(p=>(cat==='All'||p.cat===cat)&&p.name.toLowerCase().includes(q));
+ $('#grid').innerHTML=l.map(p=>{const n=cart[p.id]||0,out=p.stock<=0,id=esc(p.id);return `<div class="item"><div class="pic">${p.img?`<img src="${esc(p.img)}" alt="" loading="lazy">`:esc(p.emoji||'🛍️')}</div><b>${esc(p.name)}</b><span class="price">${inr(p.price)}</span>
+ ${out?'<span class="low">Sold out</span>':p.stock<=5?`<span class="low">Only ${p.stock} left</span>`:''}
+ ${out||shop.closed?'':n?`<div class="qty"><button data-a="dec" data-id="${id}" aria-label="Remove one">−</button><b>${n}</b><button data-a="inc" data-id="${id}" aria-label="Add one">+</button></div>`:`<button class="btn sm" data-a="inc" data-id="${id}">Add</button>`}</div>`}).join('')||'<p class="mute">No products match.</p>'}
+function lines(){return Object.keys(cart).map(id=>{const p=P(id);return{p,q:p?Math.min(Math.floor(+cart[id])||0,p.stock):0}}).filter(l=>l.p&&l.q>0)}
+function fixCart(){const b=JSON.stringify(cart),n={};lines().forEach(l=>n[l.p.id]=l.q);cart=n;SV('cart',cart);return b!==JSON.stringify(cart)}
+function totals(){const sub=lines().reduce((s,l)=>s+l.p.price*l.q,0),del=!sub?0:(shop.freeAbove>0&&sub>=shop.freeAbove?0:shop.delivery);return{sub,del,total:sub+del}}
+function bar(){const n=lines().reduce((s,l)=>s+l.q,0),t=totals(),b=$('#bar');b.style.display=n&&!shop.closed?'flex':'none';b.innerHTML=`<button class="btn" data-a="cart">View cart · ${n} item${n>1?'s':''} · ${inr(t.sub)}</button>`}
+function cartView(){if(shop.closed)return;const me=LS('me',{});$('#sheet').classList.add('on');
+ $('#panel').innerHTML=`<div class="row"><h2>Your cart</h2><button class="btn ghost sm" data-a="close">Close</button></div><div class="card stack" id="cl"></div>
+ <div class="card stack"><div><label>Your name</label><input id="cn" maxlength="60" value="${esc(me.name)}" autocomplete="name"></div><div><label>Mobile number (10 digits)</label><input id="cp" inputmode="numeric" value="${esc(me.phone)}" autocomplete="tel"></div>
+ <div><label>Delivery address with landmark</label><textarea id="ca" rows="3" maxlength="300">${esc(me.address)}</textarea></div>
+ <div><label>Pay by</label><select id="cm"><option value="UPI">UPI (pay now)</option>${shop.cod?'<option value="COD">Cash on delivery</option>':''}</select></div></div>
+ <button class="btn" data-a="place">Place order</button><div id="step"></div>`;cartList();$('#panel').focus()}
+function cartList(){const L=lines(),t=totals();$('#cl').innerHTML=L.map(l=>`<div class="row"><span>${esc(l.p.name)}<br><span class="mute">${inr(l.p.price)} each</span></span><span class="qty"><button data-a="dec" data-id="${esc(l.p.id)}" aria-label="Remove one">−</button><b>${l.q}</b><button data-a="inc" data-id="${esc(l.p.id)}" aria-label="Add one">+</button></span></div>`).join('')+
+ `<hr style="border:0;border-top:1px solid var(--line);width:100%"><div class="row"><span>Items</span><span>${inr(t.sub)}</span></div><div class="row"><span>Delivery ${shop.freeAbove>0?`<span class="mute">(free above ${inr(shop.freeAbove)})</span>`:''}</span><span>${t.del?inr(t.del):'Free'}</span></div><div class="row"><b>Total</b><b>${inr(t.total)}</b></div>`;const s=$('#step');if(s)s.innerHTML=''}
+function place(){if(shop.closed)return toast('The shop is closed right now.',1);
+ if(fixCart()){cartList();bar();grid();return toast('Some items changed in stock. Please review your cart.',1)}
+ const L=lines(),t=totals();if(!L.length)return toast('Your cart is empty.',1);
+ const n=$('#cn').value.trim().slice(0,60),p=$('#cp').value.replace(/\D/g,'').slice(-10),a=$('#ca').value.trim().slice(0,300),m=$('#cm').value==='COD'&&shop.cod?'COD':'UPI';
+ if(!n||p.length!==10||!/^[6-9]/.test(p)||!a)return toast('Enter your name, a valid 10-digit mobile number and your address.',1);
+ if(t.sub<shop.minOrder)return toast('Minimum order is '+inr(shop.minOrder),1);
+ if(phone(shop.whatsapp).length<11)return toast('This shop has not set its WhatsApp number yet.',1);
+ SV('me',{name:n,phone:p,address:a});
+ const id='O'+Date.now().toString(36).toUpperCase().slice(-5),o={id,t:Date.now(),name:n,phone:p,addr:a,pay:m,items:L.map(l=>({id:l.p.id,n:l.p.name,q:l.q,p:l.p.price})),...t};
+ const code=btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+ const msg=`*New order ${id}*\n${o.items.map(i=>`${i.q} x ${i.n} = ${inr(i.q*i.p)}`).join('\n')}\nItems ${inr(t.sub)} | Delivery ${t.del?inr(t.del):'Free'}\n*Total ${inr(t.total)}* (${m==='UPI'?'UPI':'Cash on delivery'})\n\nName: ${n}\nPhone: ${p}\nAddress: ${a}\n\n#ORD:${code}`;
+ const upi=shop.upi?`upi://pay?pa=${encodeURIComponent(shop.upi)}&pn=${encodeURIComponent(shop.name)}&am=${t.total}&cu=INR&tn=${id}`:'';
+ $('#step').innerHTML=`<div class="card stack"><b>Almost done</b>${m==='UPI'&&upi?`<a class="btn" href="${upi}">1. Pay ${inr(t.total)} with UPI app</a><span class="mute">Already paid? Go to step 2 and attach the payment screenshot in WhatsApp.</span>`:''}
+ <a class="btn wa" data-a="sent" href="https://wa.me/${phone(shop.whatsapp)}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener">${m==='UPI'&&upi?'2. ':''}Send order on WhatsApp</a></div>`}
+
+/* ================= ACCESS CONTROL ================= */
+const PERMS={'orders.view':'See orders','orders.import':'Add orders from WhatsApp','orders.advance':'Move orders forward (Confirmed, Packed, Delivered)','orders.paid':'Mark orders paid','orders.cancel':'Cancel orders','products.view':'See products and stock','products.edit':'Add and edit products and stock','products.cost':'See cost prices and profit','report.view':'See sales reports','report.export':'Download CSV','settings.edit':'Edit shop settings','shop.lock':'Open or close the shop','publish':'Download shop.json','users.manage':'Manage team, groups and backups'};
+const ALL=Object.keys(PERMS);
+const DEFG=[{id:'owner',name:'Owner',perms:ALL,locked:true},{id:'manager',name:'Manager',perms:ALL.filter(x=>x!=='users.manage')},{id:'packer',name:'Packer',perms:['orders.view','orders.advance','products.view']},{id:'delivery',name:'Delivery',perms:['orders.view','orders.advance','orders.paid']},{id:'accounts',name:'Accountant',perms:['orders.view','report.view','report.export']}];
+let users=LS('users',[]),groups=LS('groups',DEFG),sess=null;
+const IDLE=15*60000,b64e=u=>btoa(String.fromCharCode(...u)),b64d=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0)),newSalt=()=>b64e(crypto.getRandomValues(new Uint8Array(16)));
+async function hash(pw,salt){const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);return b64e(new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:b64d(salt),iterations:150000,hash:'SHA-256'},k,256)))}
+const eq=(a,b)=>{if(a.length!==b.length)return false;let r=0;for(let i=0;i<a.length;i++)r|=a.charCodeAt(i)^b.charCodeAt(i);return r===0};
+const me=()=>sess&&users.find(u=>u.id===sess.uid&&u.active);
+const grp=id=>groups.find(g=>g.id===id);
+function can(p){const u=me();if(!u||Date.now()>sess.exp)return false;const g=grp(u.group);return !!g&&(g.locked||g.perms.includes(p))}
+function need(p){if(can(p))return true;toast('Your group is not allowed to do this.',1);return false}
+function log(a,by){const l=LS('audit',[]);l.unshift({t:Date.now(),u:by||me()?.username||'-',a});SV('audit',l.slice(0,300))}
+function fresh(){orders=LS('orders',[]);users=LS('users',[]);groups=LS('groups',DEFG);const d=LS('draft',null);if(d)shop=norm(d)}
+const saveShop=()=>SV('draft',shop),saveOrders=()=>SV('orders',orders),saveUsers=()=>SV('users',users),saveGroups=()=>SV('groups',groups);
+function startSess(u){sess={uid:u.id,exp:Date.now()+IDLE};try{sessionStorage.setItem('sess',JSON.stringify(sess))}catch{}}
+function logout(silent){if(sess&&!silent)log('Logout');sess=null;try{sessionStorage.removeItem('sess')}catch{}admin()}
+function touch(){if(sess&&Date.now()<=sess.exp){sess.exp=Date.now()+IDLE;try{sessionStorage.setItem('sess',JSON.stringify(sess))}catch{}}}
+['click','keydown'].forEach(e=>addEventListener(e,touch,true));
+setInterval(()=>{if(ADMIN&&sess&&Date.now()>sess.exp){logout(true);toast('Signed out after 15 minutes of no activity.')}},15000);
+addEventListener('storage',e=>{if(!ADMIN||!['orders','draft','users','groups'].includes(e.key))return;fresh();if(sess&&!me())return logout(true);if(sess&&!document.activeElement?.matches('input,textarea,select'))admin()});
+const ownersLeft=skip=>users.filter(u=>u.active&&u.id!==skip&&grp(u.group)?.locked).length;
+const lastOwner=u=>u.active&&grp(u.group)?.locked&&ownersLeft(u.id)===0;
+
+/* ================= ADMIN ================= */
+function setupView(){$('#app').innerHTML=`<div class="wrap" style="max-width:400px;padding-top:50px"><div class="card stack"><h2>Create the owner account</h2><span class="mute">This is the first run. The owner controls the whole shop and can add team members later.</span>
+ <div><label>Your name</label><input id="sn"></div><div><label>Username</label><input id="su" autocapitalize="none" autocomplete="username"></div><div><label>Password (8+ characters)</label><input id="sp" type="password" autocomplete="new-password"></div><div><label>Repeat password</label><input id="sp2" type="password" autocomplete="new-password"></div><button class="btn" data-a="setup">Create owner account</button></div></div>`}
+function loginView(){$('#app').innerHTML=`<div class="wrap" style="max-width:400px;padding-top:50px"><div class="card stack"><h2>Sign in to ${esc(shop.name)}</h2><div><label>Username</label><input id="lu" autocapitalize="none" autocomplete="username"></div><div><label>Password</label><input id="lp" type="password" autocomplete="current-password"></div><button class="btn" data-a="login">Sign in</button><span class="mute">Forgot your password? Ask the owner to set a new one in Team.</span></div></div>`;$('#lp').onkeydown=e=>{if(e.key==='Enter')act.login()}}
+function admin(){
+ if(!window.crypto||!crypto.subtle){$('#app').innerHTML='<div class="wrap" style="padding-top:40px"><div class="card" role="alert">Admin needs a secure connection. Open it from your https GitHub Pages link or from localhost.</div></div>';return}
+ fresh();if(sess&&Date.now()>sess.exp)sess=null;
+ if(!sess)return users.length?loginView():setupView();
+ const u=me();if(!u){sess=null;return loginView()}
+ const T=[['orders','Orders','orders.view'],['products','Products','products.view'],['report','Report','report.view'],['settings','Settings',['settings.edit','publish','shop.lock']],['team','Team','users.manage']].filter(t=>[].concat(t[2]).some(can));
+ if(!T.some(t=>t[0]===tab))tab=T[0]?.[0];
+ const B={orders:ordersTab,products:productsTab,report:reportTab,settings:settingsTab,team:teamTab};
+ $('#app').innerHTML=`<header class="top row"><div><h1>${esc(shop.name)}</h1><p>${esc(u.name)} · ${esc(grp(u.group)?.name||'No group')}</p></div><div class="row"><a class="btn ghost sm" href="${location.pathname}">Customer view</a><button class="btn ghost sm" data-a="logout">Sign out</button></div></header><div class="wrap">
+ <div class="tabs">${T.map(t=>`<button class="tab ${tab===t[0]?'on':''}" data-a="tab" data-v="${t[0]}">${t[1]}</button>`).join('')}</div>${tab?B[tab]():'<div class="card">Your group has no features yet. Ask the owner to update your group.</div>'}</div>`}
+const NEXT={New:'Confirmed',Confirmed:'Packed',Packed:'Delivered'};
+function ordersTab(){return (can('orders.import')?`<div class="card stack"><b>Add an order from WhatsApp</b><span class="mute">Copy the customer's order message, paste it here. Prices are re-checked against your catalog and stock reduces automatically.</span><textarea id="paste" rows="3" placeholder="Paste order message"></textarea><button class="btn" data-a="import">Add order</button></div>`:'')+`<div class="stack" style="margin-top:14px">`+
+ (orders.length?orders.map(o=>`<div class="card stack"><div class="row"><b>${esc(o.id)} · ${esc(o.name)}</b><span class="st ${esc(o.status)}">${esc(o.status)}</span></div><span>${o.items.map(i=>`${i.q} x ${esc(i.n)}`).join(', ')}</span>
+ <div class="row"><b>${inr(o.total)} · ${esc(o.pay)}</b><span class="${o.paid?'':'low'}">${o.paid?'Paid':'Not paid'}</span></div><span class="mute">${esc(o.phone)} · ${esc(o.addr)}</span>
+ <div class="row" style="justify-content:flex-start;flex-wrap:wrap">${NEXT[o.status]&&can('orders.advance')?`<button class="btn sm" data-a="adv" data-id="${esc(o.id)}">Mark ${NEXT[o.status]}</button>`:''}${!o.paid&&o.status!=='Cancelled'&&can('orders.paid')?`<button class="btn ghost sm" data-a="paid" data-id="${esc(o.id)}">Mark paid</button>`:''}
+ <a class="btn wa sm" target="_blank" rel="noopener" href="https://wa.me/${phone(o.phone)}?text=${encodeURIComponent(`Hi ${o.name}, your order ${o.id} (${inr(o.total)}) from ${shop.name} is now: ${o.status}.${!o.paid&&o.status!=='Cancelled'&&shop.upi?` Pay by UPI to ${shop.upi}.`:''} Thank you!`)}">Message customer</a>
+ ${o.status!=='Cancelled'&&o.status!=='Delivered'&&can('orders.cancel')?`<button class="btn bad sm" data-a="cancel" data-id="${esc(o.id)}">Cancel</button>`:''}</div></div>`).join(''):'<p class="mute">No orders yet. When a customer sends an order on WhatsApp, paste it above.</p>')+'</div>'}
+function productsTab(){const ed=can('products.edit'),co=can('products.cost');
+ return (ed?`<div class="row" style="margin-bottom:10px"><span class="mute">Stock 0 shows "Sold out" to customers after you publish.</span><button class="btn" data-a="addp">Add product</button></div>`:'')+'<div class="stack">'+shop.products.map(p=>ed?`<div class="card pr" data-pid="${esc(p.id)}"><div><label>Icon</label><input data-f="emoji" value="${esc(p.emoji)}"></div><div class="nm"><label>Name</label><input data-f="name" value="${esc(p.name)}"></div><div><label>Category</label><input data-f="cat" value="${esc(p.cat)}"></div>
+ <div><label>Price</label><input data-f="price" type="number" min="0" value="${p.price}"></div>${co?`<div><label>Cost</label><input data-f="cost" type="number" min="0" value="${p.cost??''}"></div>`:'<div></div>'}<div><label>Stock</label><input data-f="stock" type="number" min="0" step="1" value="${p.stock}"></div><button class="btn bad sm" data-a="delp" data-id="${esc(p.id)}" aria-label="Delete ${esc(p.name)}">✕</button></div>`
+ :`<div class="card row"><span>${esc(p.emoji)} ${esc(p.name)}</span><span>${inr(p.price)} · <b class="${p.stock<=5?'low':''}">${p.stock} in stock</b></span></div>`).join('')+'</div>'}
+function reportTab(){const ok=orders.filter(o=>o.status!=='Cancelled'),day=new Date().toDateString(),td=ok.filter(o=>new Date(o.t).toDateString()===day),co=can('products.cost');
+ const rev=l=>l.reduce((s,o)=>s+o.total,0),prof=l=>l.reduce((s,o)=>s+o.items.reduce((a,i)=>a+(i.c==null?0:(i.p-i.c)*i.q),0),0),unpaid=ok.filter(o=>!o.paid).reduce((s,o)=>s+o.total,0),top={};
+ ok.forEach(o=>o.items.forEach(i=>top[i.n]=(top[i.n]||0)+i.q));const low=shop.products.filter(p=>p.stock<=5);
+ return `<div class="kpi"><div class="card"><span class="mute">Today's sales</span><b>${inr(rev(td))}</b></div>${co?`<div class="card"><span class="mute">Today's profit</span><b>${inr(prof(td))}</b></div>`:''}<div class="card"><span class="mute">All-time sales</span><b>${inr(rev(ok))}</b></div><div class="card"><span class="mute">Money not received</span><b>${inr(unpaid)}</b></div></div>
+ <div class="card stack" style="margin-top:12px"><b>Restock soon</b>${low.length?low.map(p=>`<span>${esc(p.name)} — <span class="low">${p.stock} left</span></span>`).join(''):'<span class="mute">Everything is well stocked.</span>'}</div>
+ <div class="card stack" style="margin-top:12px"><b>Best sellers</b>${Object.entries(top).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n,c])=>`<span>${esc(n)} — ${c} sold</span>`).join('')||'<span class="mute">No sales yet.</span>'}</div>`+(can('report.export')?`<button class="btn ghost" style="margin-top:12px" data-a="csv">Download orders as CSV</button>`:'')}
+function settingsTab(){const f=(k,l,t='text')=>`<div><label>${l}</label><input data-s="${k}" type="${t}" value="${esc(shop[k])}"></div>`;
+ return (can('settings.edit')?`<div class="card stack">${f('name','Shop name')}${f('tagline','Tagline')}${f('whatsapp','WhatsApp number with country code (919876543210)')}${f('upi','Your UPI ID (name@bank)')}${f('delivery','Delivery charge (₹)','number')}${f('freeAbove','Free delivery above (₹, 0 = never)','number')}${f('minOrder','Minimum order (₹)','number')}
+ <div><label>Cash on delivery</label><select data-s="cod"><option value="1" ${shop.cod?'selected':''}>Allowed</option><option value="0" ${shop.cod?'':'selected'}>UPI only (fewer fake orders)</option></select></div></div>`:'')+
+ (can('shop.lock')?`<div class="card stack" style="margin-top:12px"><b>Shop switch</b><div><label>Taking orders?</label><select data-s="closed"><option value="0" ${shop.closed?'':'selected'}>Open</option><option value="1" ${shop.closed?'selected':''}>Closed</option></select></div>${f('closedMsg','Message shown when closed')}<span class="mute">Takes effect for customers after you publish.</span></div>`:'')+
+ (can('publish')?`<div class="card stack" style="margin-top:12px"><b>Publish changes</b><span class="mute">Download shop.json (cost prices are removed), then upload it to GitHub to replace the old file.</span><button class="btn" data-a="pub">Download shop.json</button></div>`:'')}
+function teamTab(){const go=s=>groups.map(g=>`<option value="${esc(g.id)}" ${g.id===s?'selected':''}>${esc(g.name)}</option>`).join('');
+ return `<div class="card stack"><b>Add a team member</b><div><label>Full name</label><input id="nn"></div><div><label>Username</label><input id="nu" autocapitalize="none"></div><div><label>Password (8+ characters)</label><input id="np" type="password" autocomplete="new-password"></div><div><label>Group</label><select id="ng">${go('packer')}</select></div><button class="btn" data-a="adduser">Add member</button></div>
+ <h3 style="margin:16px 0 8px">Members</h3><div class="stack">${users.map(u=>`<div class="card stack" data-uid="${esc(u.id)}"><div class="row"><b>${esc(u.name)} <span class="mute">@${esc(u.username)}</span></b><span class="st">${u.active?'Active':'Disabled'}</span></div>
+ <div class="row" style="flex-wrap:wrap;justify-content:flex-start"><select data-ug style="width:auto">${go(u.group)}</select><button class="btn ghost sm" data-a="toggle" data-id="${esc(u.id)}">${u.active?'Disable':'Enable'}</button><input type="password" placeholder="New password" data-npw style="width:150px" autocomplete="new-password"><button class="btn ghost sm" data-a="setpw" data-id="${esc(u.id)}">Set password</button>${u.id!==sess.uid?`<button class="btn bad sm" data-a="deluser" data-id="${esc(u.id)}">Delete</button>`:''}</div></div>`).join('')}</div>
+ <h3 style="margin:16px 0 8px">Groups and what they can do</h3><div class="stack">${groups.map(g=>`<details class="card"><summary><b>${esc(g.name)}</b> <span class="mute">${users.filter(u=>u.group===g.id).length} member(s)${g.locked?' · full access, cannot be changed':''}</span></summary>${ALL.map(p=>`<label class="ck"><input type="checkbox" data-gp="${esc(g.id)}" data-perm="${p}" ${g.locked||g.perms.includes(p)?'checked':''} ${g.locked?'disabled':''}>${PERMS[p]}</label>`).join('')}${g.locked?'':`<button class="btn bad sm" data-a="delgroup" data-id="${esc(g.id)}" style="margin-top:8px">Delete group</button>`}</details>`).join('')}
+ <div class="card row"><input id="gn" placeholder="New group name (for example Cashier)"><button class="btn" data-a="addgroup">Add group</button></div></div>
+ <h3 style="margin:16px 0 8px">Backup</h3><div class="card stack"><span class="mute">Orders and accounts live in this browser. Download a backup weekly. Restoring on another device copies the team there too.</span><div class="row" style="justify-content:flex-start;flex-wrap:wrap"><button class="btn" data-a="backup">Download backup</button><input type="file" id="rf" accept=".json" style="width:auto"></div></div>
+ <h3 style="margin:16px 0 8px">Recent activity</h3><div class="card stack">${LS('audit',[]).slice(0,30).map(a=>`<span class="mute">${new Date(a.t).toLocaleString()} · ${esc(a.u)} · ${esc(a.a)}</span>`).join('')||'<span class="mute">Nothing yet.</span>'}</div>`}
+
+/* ---- order vetting: never trust numbers inside a pasted message ---- */
+function vet(o){const warn=[];if(!o||typeof o!=='object'||!Array.isArray(o.items)||!o.items.length||o.items.length>50)return{err:'The order data is invalid.'};
+ const items=[];for(const i of o.items){const q=Math.floor(+(i&&i.q));if(!(q>=1&&q<=999))return{err:'The order has an invalid quantity.'};const p=P(String(i.id));
+  if(!p)warn.push(`"${String(i.n).slice(0,40)}" is not in your catalog`);else{if(p.price!==+i.p)warn.push(`${p.name}: customer saw ${inr(i.p)}, your price is now ${inr(p.price)}`);if(p.stock<q)warn.push(`${p.name}: only ${p.stock} in stock`)}
+  items.push({id:String(i.id),n:p?p.name:String(i.n).slice(0,80),q,p:p?p.price:Math.max(0,+i.p||0),c:p?.cost})}
+ const sub=items.reduce((s,i)=>s+i.p*i.q,0),del=shop.freeAbove>0&&sub>=shop.freeAbove?0:shop.delivery,total=sub+del;if(Math.round(+o.total)!==total)warn.push(`Customer's total was ${inr(o.total)} but the correct total is ${inr(total)}`);
+ const ph=String(o.phone).replace(/\D/g,'').slice(-10),id=String(o.id);if(!/^O[A-Z0-9]{1,8}$/.test(id)||ph.length!==10)return{err:'The order id or phone number is invalid.'};
+ return{warn,o:{id,t:Date.now(),name:String(o.name).slice(0,60),phone:ph,addr:String(o.addr).slice(0,300),pay:o.pay==='COD'?'COD':'UPI',items,sub,del,total,status:'New',paid:false}}}
+
+/* ================= ACTIONS ================= */
+const cell=c=>{c=String(c);if(/^[=+\-@\t\r]/.test(c))c="'"+c;return '"'+c.replace(/"/g,'""')+'"'};
+function dl(n,t,m){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:m}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+const find=id=>orders.find(x=>x.id===id);
+const act={
+ cat(d){cat=d.v;chips();grid()},close(){$('#sheet')?.classList.remove('on')},cart:cartView,place,
+ inc(d){const p=P(d.id);if(!p||shop.closed)return;if((cart[d.id]||0)<p.stock)cart[d.id]=(cart[d.id]||0)+1;else toast('No more stock available.',1);sync()},
+ dec(d){cart[d.id]=Math.max(0,(cart[d.id]||0)-1);if(!cart[d.id])delete cart[d.id];sync()},
+ sent(){setTimeout(()=>{cart={};SV('cart',cart);act.close();grid();bar()},800)},
+ async setup(){if(users.length)return;const n=$('#sn').value.trim(),un=$('#su').value.trim().toLowerCase(),p=$('#sp').value;
+  if(!n||!/^[a-z0-9._-]{3,30}$/.test(un))return toast('Username: 3 to 30 letters, numbers, dot, dash or underscore.',1);if(p.length<8)return toast('Password needs at least 8 characters.',1);if(p!==$('#sp2').value)return toast('Passwords do not match.',1);
+  const salt=newSalt(),u={id:uid(),name:n,username:un,salt,hash:await hash(p,salt),group:'owner',active:true,created:Date.now()};users=[u];saveUsers();saveGroups();startSess(u);log('Owner account created');admin()},
+ async login(){const f=LS('fails',{n:0,until:0}),now=Date.now();if(f.until>now)return toast(`Too many attempts. Try again in ${Math.ceil((f.until-now)/1000)} seconds.`,1);
+  const un=$('#lu').value.trim().toLowerCase(),pw=$('#lp').value,u=users.find(x=>x.username===un&&x.active);let ok=false;
+  if(u)ok=eq(await hash(pw,u.salt),u.hash);else await hash(pw,newSalt());
+  if(!ok){f.n++;if(f.n>=5)f.until=Date.now()+30000*2**Math.min(f.n-5,6);SV('fails',f);log(`Failed sign-in for "${un.slice(0,30)}"`,'-');return toast('Wrong username or password.',1)}
+  SV('fails',{n:0,until:0});startSess(u);log('Signed in',u.username);admin()},
+ logout(){logout()},tab(d){tab=d.v;admin()},
+ import(){if(!need('orders.import'))return;fresh();const m=$('#paste').value.match(/#ORD:([A-Za-z0-9+\/=]+)/);if(!m)return toast('No order code found. Paste the full WhatsApp message.',1);
+  let raw;try{raw=JSON.parse(decodeURIComponent(escape(atob(m[1]))))}catch{return toast('The order code is damaged. Ask the customer to resend.',1)}
+  const r=vet(raw);if(r.err)return toast(r.err,1);if(orders.some(x=>x.id===r.o.id))return toast('This order is already added.',1);
+  if(r.warn.length&&!confirm('Please check before adding:\n- '+r.warn.join('\n- ')+'\n\nAdd this order anyway? (Totals use your current prices.)'))return;
+  r.o.items.forEach(i=>{const p=P(i.id);if(p)p.stock=Math.max(0,p.stock-i.q)});orders.unshift(r.o);if(saveOrders()&&saveShop()){log('Added order '+r.o.id);admin()}},
+ adv(d){if(!need('orders.advance'))return;fresh();const o=find(d.id);if(!o||!NEXT[o.status])return;o.status=NEXT[o.status];if(o.status==='Delivered'&&o.pay==='COD')o.paid=true;saveOrders();log(`Order ${o.id} → ${o.status}`);admin()},
+ paid(d){if(!need('orders.paid'))return;fresh();const o=find(d.id);if(o){o.paid=true;saveOrders();log(`Order ${o.id} marked paid`);admin()}},
+ cancel(d){if(!need('orders.cancel')||!confirm('Cancel this order and return the stock?'))return;fresh();const o=find(d.id);if(!o||o.status==='Cancelled'||o.status==='Delivered')return;o.status='Cancelled';o.items.forEach(i=>{const p=P(i.id);if(p)p.stock+=i.q});saveOrders();saveShop();log('Cancelled order '+o.id);admin()},
+ addp(){if(!need('products.edit'))return;fresh();shop.products.unshift({id:'p'+Date.now().toString(36),name:'New product',cat:'General',emoji:'🛍️',img:'',price:0,cost:0,stock:0});saveShop();log('Added a product');admin()},
+ delp(d){if(!need('products.edit')||!confirm('Delete this product?'))return;fresh();shop.products=shop.products.filter(p=>p.id!==d.id);saveShop();log('Deleted a product');admin()},
+ pub(){if(!need('publish'))return;fresh();const out={...shop,products:shop.products.map(({cost,...r})=>r)};dl('shop.json',JSON.stringify(out,null,1),'application/json');log('Downloaded shop.json')},
+ csv(){if(!need('report.export'))return;const r=[['id','date','name','phone','items','total','payment','status','paid']].concat(orders.map(o=>[o.id,new Date(o.t).toLocaleString(),o.name,o.phone,o.items.map(i=>i.q+'x'+i.n).join('; '),o.total,o.pay,o.status,o.paid?'yes':'no']));dl('orders.csv',r.map(l=>l.map(cell).join(',')).join('\n'),'text/csv');log('Downloaded CSV')},
+ async adduser(){if(!need('users.manage'))return;fresh();const n=$('#nn').value.trim(),un=$('#nu').value.trim().toLowerCase(),p=$('#np').value,g=$('#ng').value;
+  if(!n||!/^[a-z0-9._-]{3,30}$/.test(un))return toast('Username: 3 to 30 letters, numbers, dot, dash or underscore.',1);if(p.length<8)return toast('Password needs at least 8 characters.',1);
+  if(users.some(u=>u.username===un))return toast('That username is taken.',1);if(!grp(g))return toast('Pick a group.',1);const salt=newSalt();users.push({id:uid(),name:n,username:un,salt,hash:await hash(p,salt),group:g,active:true,created:Date.now()});saveUsers();log('Added user '+un);admin()},
+ toggle(d){if(!need('users.manage'))return;fresh();const u=users.find(x=>x.id===d.id);if(!u)return;if(lastOwner(u))return toast('You cannot disable the last active owner. That would lock everyone out.',1);u.active=!u.active;saveUsers();log(`${u.active?'Enabled':'Disabled'} user ${u.username}`);if(!me())return logout(true);admin()},
+ async setpw(d,b){if(!need('users.manage'))return;fresh();const u=users.find(x=>x.id===d.id),p=b.closest('[data-uid]').querySelector('[data-npw]').value;if(!u)return;if(p.length<8)return toast('Password needs at least 8 characters.',1);u.salt=newSalt();u.hash=await hash(p,u.salt);saveUsers();log('Reset password for '+u.username);toast('Password updated.');admin()},
+ deluser(d){if(!need('users.manage'))return;fresh();const u=users.find(x=>x.id===d.id);if(!u||u.id===sess.uid)return;if(lastOwner(u))return toast('You cannot delete the last active owner.',1);if(!confirm(`Delete ${u.name}?`))return;users=users.filter(x=>x.id!==u.id);saveUsers();log('Deleted user '+u.username);admin()},
+ addgroup(){if(!need('users.manage'))return;fresh();const n=$('#gn').value.trim().slice(0,30);if(!n)return toast('Enter a group name.',1);groups.push({id:'g'+Date.now().toString(36),name:n,perms:['orders.view']});saveGroups();log('Added group '+n);admin()},
+ delgroup(d){if(!need('users.manage'))return;fresh();const g=grp(d.id);if(!g||g.locked)return;if(users.some(u=>u.group===g.id))return toast('Move this group\'s members to another group first.',1);groups=groups.filter(x=>x.id!==g.id);saveGroups();log('Deleted group '+g.name);admin()},
+ backup(){if(!need('users.manage'))return;dl('dukaan-backup.json',JSON.stringify({v:2,orders:LS('orders',[]),draft:LS('draft',null),users:LS('users',[]),groups:LS('groups',DEFG),audit:LS('audit',[])}),'application/json');log('Downloaded backup')}};
+const PUBLIC=['cat','close','cart','place','inc','dec','sent','login','setup'];
+document.addEventListener('click',e=>{const b=e.target.closest('[data-a]');if(!b||!act[b.dataset.a])return;const a=b.dataset.a;if(!PUBLIC.includes(a)&&(!ADMIN||!me()||Date.now()>sess.exp)){if(ADMIN)admin();return}act[a](b.dataset,b)});
+document.addEventListener('change',e=>{const t=e.target;
+ if(t.id==='rf'&&need('users.manage')){const f=t.files[0];if(!f)return;f.text().then(x=>{let j;try{j=JSON.parse(x)}catch{return toast('That file is not a valid backup.',1)}if(!j||j.v!==2||!Array.isArray(j.orders)||!Array.isArray(j.users)||!Array.isArray(j.groups)||!j.groups.some(g=>g.locked)||!j.users.some(u=>u.active&&j.groups.find(g=>g.id===u.group&&g.locked)))return toast('Backup is incomplete or has no active owner.',1);
+  if(!confirm('Replace ALL data on this device with the backup? You will be signed out.'))return;SV('orders',j.orders);SV('users',j.users);SV('groups',j.groups);SV('audit',j.audit||[]);if(j.draft)SV('draft',j.draft);sess=null;try{sessionStorage.removeItem('sess')}catch{}location.reload()});return}
+ if(!ADMIN||!sess)return;const row=t.closest('[data-pid]');
+ if(row&&t.dataset.f&&need('products.edit')){fresh();const p=P(row.dataset.pid);if(!p)return;const f=t.dataset.f;if(f==='cost'&&!need('products.cost'))return;p[f]=f==='stock'?Math.max(0,Math.floor(+t.value||0)):['price','cost'].includes(f)?Math.max(0,+t.value||0):String(t.value).slice(0,80);saveShop();log(`Edited ${p.name} (${f})`)}
+ else if(t.dataset.s){const k=t.dataset.s,lock=['closed','closedMsg'].includes(k);if(!need(lock?'shop.lock':'settings.edit'))return;fresh();shop[k]=k==='cod'?t.value==='1':k==='closed'?t.value==='1':['delivery','freeAbove','minOrder'].includes(k)?Math.max(0,+t.value||0):t.value.trim().slice(0,200);saveShop();log('Changed setting '+k)}
+ else if(t.dataset.gp&&need('users.manage')){fresh();const g=grp(t.dataset.gp);if(!g||g.locked)return;const p=t.dataset.perm;g.perms=t.checked?[...new Set([...g.perms,p])]:g.perms.filter(x=>x!==p);saveGroups();log(`Group ${g.name}: ${p} ${t.checked?'on':'off'}`)}
+ else if(t.matches('[data-ug]')&&need('users.manage')){fresh();const u=users.find(x=>x.id===t.closest('[data-uid]').dataset.uid);if(!u)return;const old=u.group;if(lastOwner(u)&&!grp(t.value)?.locked){toast('The last owner must stay in the Owner group.',1);t.value=old;return}u.group=t.value;saveUsers();log(`Moved ${u.username} to ${grp(t.value)?.name}`);if(!me())return logout(true);admin()}});
+function sync(){fixCart();grid();bar();if($('#sheet').classList.contains('on')){if(!lines().length)act.close();else cartList()}}
+init();
+</script></body></html>
