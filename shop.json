@@ -1,4 +1,4 @@
-{"name":"Lakshmi General Store","tagline":"Order on WhatsApp. Delivered to your door.","whatsapp":"917893812206","upi":"yourname@upi","delivery":30,"freeAbove":500,"minOrder":100,"cod":true,"products":[
+{"name":"Lakshmi General Store","tagline":"Order on WhatsApp. Delivered to your door.","whatsapp":"91206","upi":"yourname@upi","delivery":30,"freeAbove":500,"minOrder":100,"cod":true,"products":[
 {"id":"p1","name":"Basmati Rice 1kg","cat":"Groceries","emoji":"🍚","price":95,"stock":40},
 {"id":"p2","name":"Toor Dal 1kg","cat":"Groceries","emoji":"🫘","price":140,"stock":25},
 {"id":"p3","name":"Groundnut Oil 1L","cat":"Groceries","emoji":"🛢️","price":165,"stock":12},
